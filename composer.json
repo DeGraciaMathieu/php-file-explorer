@@ -1,0 +1,31 @@
+{
+    "name": "degraciamathieu/php-file-explorer",
+    "type": "package",
+    "description": "",
+    "homepage": "https://github.com/DeGraciaMathieu/php-file-explorer",
+    "license": "MIT",
+    "authors": [
+        {
+          "name": "De Gracia Mathieu",
+          "email": "dev@degracia-mathieu.fr"
+        }
+    ],
+    "require": {
+        "php": "^8.0",
+        "symfony/filesystem": "^6.0"
+    },
+    "require-dev": {
+        "phpunit/phpunit": "^9.5",
+        "symfony/var-dumper": "^5.1|^6.1"
+    },
+    "autoload": {
+        "psr-4": {
+            "DeGraciaMathieu\\FileExplorer\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "DeGraciaMathieu\\FileExplorer\\Tests\\": "tests/"
+        }
+    }
+}
