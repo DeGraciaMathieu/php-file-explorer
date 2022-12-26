@@ -33,10 +33,12 @@ final class FileHelper
     public static function toRelativePath(string $path, string $basePath): string
     {
         try {
+
             $relativePath = (new Filesystem())->makePathRelative($path, $basePath);
 
             return \rtrim($relativePath, '/\\');
-        } catch (FilesystemException $e) {
+
+        } catch (FilesystemException) {
             return $path;
         }
     }

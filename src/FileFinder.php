@@ -42,8 +42,11 @@ final class FileFinder
      * @param array<string> $filesToIgnore List of files to ignore.
      * @param string $basePath The base path.
      */
-    public function __construct(array $fileExtensions, array $filesToIgnore, string $basePath)
-    {
+    public function __construct(
+        array $fileExtensions, 
+        array $filesToIgnore, 
+        string $basePath
+    ) {
         $this->fileExtensions = $fileExtensions;
         $this->filters = \array_map(function (string $fileToIgnore): string {
             return $this->patternToRegex($fileToIgnore);
@@ -58,12 +61,13 @@ final class FileFinder
      * @param array<string> $paths Paths in which to look for .php files.
      * @return Generator<int, File>
      */
-    public function getPhpFiles(array $paths): Generator
+    public function getFiles(array $paths): Generator
     {
         foreach ($paths as $path) {
+            
             $absolutePath = FileHelper::toAbsolutePath($path, $this->basePath);
 
-            yield from $this->getPhpFilesFromPath($absolutePath);
+            yield from $this->getFilesFromPath($absolutePath);
         }
     }
 
@@ -74,9 +78,10 @@ final class FileFinder
      * @param string $path Path in which to look for .php files.
      * @return Generator<int, File>
      */
-    private function getPhpFilesFromPath(string $path): Generator
+    private function getFilesFromPath(string $path): Generator
     {
         if (\is_file($path)) {
+
             $file = new SplFileInfo($path);
 
             yield new File((string) $file->getRealPath(), $this->getDisplayPath($file));
@@ -89,7 +94,7 @@ final class FileFinder
             return;
         }
 
-        foreach ($this->findPhpFiles($path) as $file) {
+        foreach ($this->findFiles($path) as $file) {
             yield new File((string) $file->getRealPath(), $this->getDisplayPath($file));
         }
     }
@@ -104,23 +109,6 @@ final class FileFinder
     }
 
     /**
-     * Recursively finds all PHP files in a given directory.
-     *
-     * @param string $path Path in which to look for .php files.
-     * @return Generator<int, SplFileInfo>
-     */
-    private function findPhpFiles(string $path): Generator
-    {
-        foreach ($this->findFiles($path) as $file) {
-            if (!\in_array($file->getExtension(), $this->fileExtensions, true) || $this->fileShouldBeIgnored($file)) {
-                continue;
-            }
-
-            yield $file;
-        }
-    }
-
-    /**
      * Recursively finds all files in a given directory.
      *
      * @param string $path Path in which to look for .php files.
@@ -131,7 +119,14 @@ final class FileFinder
         $directoryIterator = new RecursiveDirectoryIterator($path);
 
         foreach (new RecursiveIteratorIterator($directoryIterator) as $item) {
-            if (!$item instanceof SplFileInfo || $item->isDir()) {
+
+            if (! $item instanceof SplFileInfo || $item->isDir()) {
+                continue;
+            }
+
+            if (! \in_array($item->getExtension(), $this->fileExtensions, true) 
+                || $this->fileShouldBeIgnored($item)
+            ) {
                 continue;
             }
 
@@ -147,7 +142,9 @@ final class FileFinder
     private function fileShouldBeIgnored(SplFileInfo $file): bool
     {
         foreach ($this->filters as $regex) {
+
             $realPath = $file->getRealPath();
+
             if (false === $realPath || (bool) \preg_match("#{$regex}#", $realPath)) {
                 return true;
             }
