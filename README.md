@@ -1,3 +1,4 @@
+[![PHP Composer](https://github.com/DeGraciaMathieu/php-file-explorer/actions/workflows/build.yml/badge.svg)](https://github.com/DeGraciaMathieu/php-file-explorer/actions/workflows/build.yml)
 # php-file-explorer
 Code extracted from [bmitch/churn-php](https://github.com/bmitch/churn-php)
 
