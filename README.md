@@ -3,6 +3,7 @@
 [![packagist](https://img.shields.io/packagist/dependency-v/degraciamathieu/php-file-explorer/php)]([https://img.shields.io/packagist/dependency-v/degraciamathieu/php-file-explorer/php](https://img.shields.io/packagist/dependency-v/degraciamathieu/php-file-explorer/php))
 # php-file-explorer
 Code extracted from [bmitch/churn-php](https://github.com/bmitch/churn-php)
+> composer require degraciamathieu/php-file-explorer
 ## Usage
 ```php
 $fileFinder = new FileFinder(
