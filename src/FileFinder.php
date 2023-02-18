@@ -87,10 +87,6 @@ final class FileFinder
                 continue;
             }
 
-            if ($this->fileHasWrongExtension($item)) {
-                continue;
-            }
-
             if ($this->fileShouldBeSkipped($item)) {
                 continue;
             }
@@ -99,13 +95,12 @@ final class FileFinder
         }
     }
 
-    private function fileHasWrongExtension(SplFileInfo $item): bool
-    {
-        return ! in_array($item->getExtension(), $this->fileExtensions, true);
-    }
-
     private function fileShouldBeSkipped(SplFileInfo $item): bool
     {
+        if ($this->fileHasWrongExtension($item)) {
+            return true;
+        }
+
         $realPath = $item->getRealPath();
 
         if ($this->fileShouldBeIgnored($realPath)) {
@@ -117,6 +112,11 @@ final class FileFinder
         }
 
         return false;
+    }
+
+    private function fileHasWrongExtension(SplFileInfo $item): bool
+    {
+        return ! in_array($item->getExtension(), $this->fileExtensions, true);
     }
 
     private function fileShouldBeIgnored(string $realPath): bool
