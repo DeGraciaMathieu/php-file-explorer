@@ -9,107 +9,111 @@ use PHPUnit\Framework\TestCase;
 
 final class FileFinderTest extends TestCase
 {
-    /** @test */
-    public function it_can_get_the_php_files_in_a_filter(): void
+    /** 
+     * @test 
+     * @dataProvider filesWithOnlyFiltersProvider
+     */
+    public function it_can_get_files_with_only_filters(int $expected, array $onlyPatterns): void
     {
-        $fileFinder = new FileFinder(['php'], [], __DIR__);
+        $fileFinder = new FileFinder(
+            basePath: __DIR__, 
+            onlyPatterns: $onlyPatterns,
+        );
 
-        self::assertCount(3, \iterator_to_array($fileFinder->getFiles([__DIR__ . '/Assets']), false));
+        $files = $fileFinder->getFiles('Assets');
+
+        $files = iterator_to_array($files, false);
+
+        $this->assertCount($expected, $files);
     }
 
-    /** @test */
+    public function filesWithOnlyFiltersProvider(): iterable
+    {
+        yield [2, ['.*/Logics/.*']];
+        yield [1, ['.*Logic.php']];
+        yield [3, ['Bar']];
+        yield [4, ['Ba']];
+    }
+
+    /** 
+     * @test 
+     * @dataProvider filesWithIgnoreFiltersProvider
+     */
+    public function it_can_get_files_with_ignore_filters(int $expected, array $ignorePatterns): void
+    {
+        $fileFinder = new FileFinder(
+            basePath: __DIR__, 
+            ignorePatterns: $ignorePatterns,
+        );
+
+        $files = $fileFinder->getFiles('Assets');
+
+        $files = iterator_to_array($files, false);
+
+        $this->assertCount($expected, $files);
+    }
+
+    public function filesWithIgnoreFiltersProvider(): iterable
+    {
+        yield [3, ['.*/Logics/.*']];
+        yield [4, ['.*Logic.php']];
+        yield [2, ['Bar']];
+        yield [1, ['Ba']];
+    }
+
+    /** 
+     * @test 
+     */
     public function it_can_get_the_php_files_in_multiple_directories(): void
     {
-        $fileFinder = new FileFinder(['php'], [], __DIR__);
-
-        self::assertCount(
-            7,
-            \iterator_to_array($fileFinder->getFiles([__DIR__ . '/Assets', __DIR__ . '/Assets2']), false)
+        $fileFinder = new FileFinder(
+            basePath: __DIR__, 
         );
+
+        $files = $fileFinder->getFiles([
+            'Assets',
+            'Assets2',
+        ]);
+
+        $files = iterator_to_array($files, false);
+
+        self::assertCount(7, $files);
     }
 
-    /** @test */
+    /** 
+     * @test 
+     */
     public function it_can_get_the_php_files_by_name(): void
     {
-        $fileFinder = new FileFinder(['php'], [], __DIR__);
-
-        self::assertCount(
-            2,
-            \iterator_to_array(
-                $fileFinder->getFiles([__DIR__ . '/Assets/Bar.php', __DIR__ . '/Assets/Foo.php']),
-                false
-            )
+        $fileFinder = new FileFinder(
+            basePath: __DIR__, 
         );
+
+        $files = $fileFinder->getFiles([
+            'Assets/DeepAssets/Logics/Bar.php',
+            'Assets2/Deep.php',
+        ]);
+
+        $files = iterator_to_array($files, false);
+
+        self::assertCount(2, $files);
     }
 
-    /** @test */
+    /** 
+     * @test 
+     */
     public function it_does_not_throw_with_non_existing_path(): void
     {
-        $fileFinder = new FileFinder(['php'], [], __DIR__);
-
-        self::assertCount(0, \iterator_to_array($fileFinder->getFiles([__DIR__ . '/NotExisting.php']), false));
-    }
-
-    /** @test */
-    public function it_ignores_files_specified_to_ignore_in_the_config(): void
-    {
-        $fileFinder = new FileFinder(['php'], ['Assets/Baz.php'], __DIR__);
-        self::assertCount(2, \iterator_to_array($fileFinder->getFiles([__DIR__ . '/Assets']), false));
-    }
-
-    /** @test */
-    public function it_ignores_everything_within_a_folder(): void
-    {
-        $fileFinder = new FileFinder(['php'], ['Assets2/DeepAssets/*'], __DIR__);
-        self::assertCount(1, \iterator_to_array($fileFinder->getFiles([__DIR__ . '/Assets2']), false));
-
-        $fileFinder = new FileFinder(['php', 'inc'], ['Assets2/DeepAssets/*'], __DIR__);
-        self::assertCount(2, \iterator_to_array($fileFinder->getFiles([__DIR__ . '/Assets2']), false));
-    }
-
-    /** @test */
-    public function it_ignores_everything_starts_with_a_string(): void
-    {
-        $fileFinder = new FileFinder(['php'], ['Assets2/F*'], __DIR__);
-        self::assertCount(3, \iterator_to_array($fileFinder->getFiles([__DIR__ . '/Assets2']), false));
-
-        $fileFinder = new FileFinder(['php'], ['Assets2/DeepAssets/Deep*'], __DIR__);
-        self::assertCount(2, \iterator_to_array($fileFinder->getFiles([__DIR__ . '/Assets2']), false));
-
-        $fileFinder = new FileFinder(['php'], ['Assets2/DeepAssets/Dif*'], __DIR__);
-        self::assertCount(3, \iterator_to_array($fileFinder->getFiles([__DIR__ . '/Assets2']), false));
-    }
-
-    /** @test */
-    public function it_ignores_multiple_matching_patterns_in_multiple_folders(): void
-    {
-        $fileFinder = new FileFinder(['php'], ['Assets2/F*', 'Assets/B*'], __DIR__);
-        self::assertCount(
-            4,
-            \iterator_to_array($fileFinder->getFiles([__DIR__ . '/Assets', __DIR__ . '/Assets2']), false)
-        );
-
-        $fileFinder = new FileFinder(['php', 'inc'], ['Assets2/DeepAssets/De*', 'Assets/B*'], __DIR__);
-        self::assertCount(
-            5,
-            \iterator_to_array($fileFinder->getFiles([__DIR__ . '/Assets', __DIR__ . '/Assets2']), false)
-        );
-
         $fileFinder = new FileFinder(
-            ['php', 'inc'],
-            ['Assets2/DeepAssets/Di*', 'Assets2/DeepAssets/De*', 'Assets2/F*'],
-            __DIR__
+            basePath: __DIR__, 
         );
-        self::assertCount(1, \iterator_to_array($fileFinder->getFiles([__DIR__ . '/Assets2']), false));
 
-        $fileFinder = new FileFinder(['php', 'inc'], ['Assets2/*.php'], __DIR__);
-        self::assertCount(1, \iterator_to_array($fileFinder->getFiles([__DIR__ . '/Assets2']), false));
-    }
+        $files = $fileFinder->getFiles([
+            'qdqsdq.php',
+        ]);
 
-    /** @test */
-    public function it_uses_extensions_specified_in_the_config(): void
-    {
-        $fileFinder = new FileFinder(['php', 'inc'], [], __DIR__);
-        self::assertCount(4, \iterator_to_array($fileFinder->getFiles([__DIR__ . '/Assets']), false));
+        $files = iterator_to_array($files, false);
+
+        self::assertCount(0, $files);
     }
 }

@@ -1,6 +1,6 @@
 <?php
 
-namespace Acme;
+namespace DeGraciaMathieu\Tests\Unit\Assets;
 
 class Bar
 {

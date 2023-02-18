@@ -9,12 +9,14 @@ use PHPUnit\Framework\TestCase;
 
 final class FileTest extends TestCase
 {
-    /** @test */
+    /** 
+     * @test 
+     */
     public function it_can_return_its_values(): void
     {
         $file = new File('foo/bar/baz.php', 'bar/baz.php');
 
-        self::assertSame('foo/bar/baz.php', $file->getFullPath());
-        self::assertSame('bar/baz.php', $file->getDisplayPath());
+        $this->assertSame('foo/bar/baz.php', $file->fullPath);
+        $this->assertSame('bar/baz.php', $file->displayPath);
     }
 }

@@ -14,19 +14,18 @@ final class FileHelperTest extends TestCase
     /**
      * @test
      * @dataProvider provide_absolute_paths
-     * @param string $path The path of an item.
-     * @param string $confPath The absolute base path.
-     * @param string $expectedPath The expected absolute path of the given item.
      */
     public function it_can_return_absolute_path(string $path, string $confPath, string $expectedPath): void
     {
-        self::assertSame($expectedPath, FileHelper::toAbsolutePath($path, $confPath));
+        $absolutePath = FileHelper::toAbsolutePath($path, $confPath);
+
+        $this->assertSame($expectedPath, $absolutePath);
     }
 
     /**
      * @return iterable<int, array{string, string, string}>
      */
-    public static function provide_absolute_paths(): iterable
+    public function provide_absolute_paths(): iterable
     {
         yield ['/tmp', '/path', '/tmp'];
         yield ['foo', '/path', '/path/foo'];
@@ -40,19 +39,18 @@ final class FileHelperTest extends TestCase
     /**
      * @test
      * @dataProvider provide_relative_paths
-     * @param string $path The absolute path of an item.
-     * @param string $confPath The absolute base path.
-     * @param string $expectedPath The expected relative path of the given item.
      */
     public function it_can_return_relative_path(string $path, string $confPath, string $expectedPath): void
     {
-        self::assertSame($expectedPath, FileHelper::toRelativePath($path, $confPath));
+        $relativePath = FileHelper::toRelativePath($path, $confPath);
+
+        $this->assertSame($expectedPath, $relativePath);
     }
 
     /**
      * @return iterable<int, array{string, string, string}>
      */
-    public static function provide_relative_paths(): iterable
+    public function provide_relative_paths(): iterable
     {
         yield ['/tmp/file.php', '/tmp', 'file.php'];
         yield ['/tmp/file.php', '/tmp/', 'file.php'];
@@ -77,13 +75,13 @@ final class FileHelperTest extends TestCase
 
         FileHelper::ensureFileIsWritable($filePath);
 
-        self::assertTrue(\is_dir($dirPath), "Directory should exist: " . $dirPath);
+        $this->assertTrue(\is_dir($dirPath), 'Directory should exist: ' . $dirPath);
     }
 
     /**
      * @return iterable<int, array{string}>
      */
-    public static function provide_writable_paths(): iterable
+    public function provide_writable_paths(): iterable
     {
         yield [__FILE__];
         yield [__DIR__ . '/non-existing-file'];
@@ -98,13 +96,14 @@ final class FileHelperTest extends TestCase
     public function it_throws_with_invalid_writable_files(string $filePath): void
     {
         $this->expectException(InvalidArgumentException::class);
+        
         FileHelper::ensureFileIsWritable($filePath);
     }
 
     /**
      * @return iterable<int, array{string}>
      */
-    public static function provide_invalid_writable_paths(): iterable
+    public function provide_invalid_writable_paths(): iterable
     {
         yield [''];
         yield [__DIR__];

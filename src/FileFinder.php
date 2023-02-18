@@ -9,60 +9,23 @@ use RecursiveDirectoryIterator;
 use RecursiveIteratorIterator;
 use SplFileInfo;
 
-/**
- * @internal
- */
 final class FileFinder
 {
-    /**
-     * List of file extensions to look for.
-     *
-     * @var array<string>
-     */
-    private $fileExtensions;
-
-    /**
-     * List of regular expressions used to filter files to ignore.
-     *
-     * @var array<string>
-     */
-    private $filters;
-
-    /**
-     * The base path.
-     *
-     * @var string
-     */
-    private $basePath;
-
-    /**
-     * Class constructor.
-     *
-     * @param array<string> $fileExtensions List of file extensions to look for.
-     * @param array<string> $filesToIgnore List of files to ignore.
-     * @param string $basePath The base path.
-     */
     public function __construct(
-        array $fileExtensions, 
-        array $filesToIgnore, 
-        string $basePath
-    ) {
-        $this->fileExtensions = $fileExtensions;
-        $this->filters = \array_map(function (string $fileToIgnore): string {
-            return $this->patternToRegex($fileToIgnore);
-        }, $filesToIgnore);
-        $this->basePath = $basePath;
-    }
+        private string $basePath,
+        private array $fileExtensions = ['php'], 
+        private array $ignorePatterns = [],  
+        private array $onlyPatterns = [], 
+    ) {}
 
     /**
      * Recursively finds all files with the .php extension in the provided
-     * $paths and returns list as array.
-     *
-     * @param array<string> $paths Paths in which to look for .php files.
-     * @return Generator<int, File>
+     * $paths and returns list as Generator.
      */
-    public function getFiles(array $paths): Generator
+    public function getFiles(array|string $paths = [__DIR__]): Generator
     {
+        $paths = is_array($paths) ? $paths :  [$paths];
+
         foreach ($paths as $path) {
             
             $absolutePath = FileHelper::toAbsolutePath($path, $this->basePath);
@@ -89,8 +52,8 @@ final class FileFinder
             return;
         }
 
-        if (!\is_dir($path)) {
-            // invalid path
+        # invalid dir path
+        if (! \is_dir($path)) {
             return;
         }
 
@@ -124,8 +87,15 @@ final class FileFinder
                 continue;
             }
 
-            if (! \in_array($item->getExtension(), $this->fileExtensions, true) 
-                || $this->fileShouldBeIgnored($item)
+            if ($this->fileHasWrongExtension($item)) {
+                continue;
+            }
+
+            $realPath = $item->getRealPath();
+
+            if (
+                $this->fileShouldBeIgnored($realPath) 
+                || $this->fileShouldNotBeKept($realPath)
             ) {
                 continue;
             }
@@ -134,18 +104,16 @@ final class FileFinder
         }
     }
 
-    /**
-     * Determines if a file should be ignored.
-     *
-     * @param SplFileInfo $file File.
-     */
-    private function fileShouldBeIgnored(SplFileInfo $file): bool
+    private function fileHasWrongExtension(SplFileInfo $item): bool
     {
-        foreach ($this->filters as $regex) {
+        return ! in_array($item->getExtension(), $this->fileExtensions, true);
+    }
 
-            $realPath = $file->getRealPath();
+    private function fileShouldBeIgnored(string $realPath): bool
+    {
+        foreach ($this->ignorePatterns as $regex) {
 
-            if (false === $realPath || (bool) \preg_match("#{$regex}#", $realPath)) {
+            if (\preg_match("#{$regex}#", $realPath)) {
                 return true;
             }
         }
@@ -153,19 +121,15 @@ final class FileFinder
         return false;
     }
 
-    /**
-     * Translate file path pattern to regex string.
-     *
-     * @param string $filePattern File pattern to be ignored.
-     */
-    private function patternToRegex(string $filePattern): string
+    private function fileShouldNotBeKept(string $realPath): bool
     {
-        $regex = (string) \preg_replace("#(.*)\*([\w.]*)$#", "$1.+$2$", $filePattern);
+        foreach ($this->onlyPatterns as $regex) {
 
-        if ('\\' === \DIRECTORY_SEPARATOR) {
-            $regex = \str_replace('/', '\\\\', $regex);
+            if (! \preg_match("#{$regex}#", $realPath)) {
+                return true;
+            }
         }
 
-        return $regex;
+        return false;
     }
 }
