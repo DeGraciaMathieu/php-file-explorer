@@ -37,6 +37,26 @@ final class FileFinderTest extends TestCase
 
     /** 
      * @test 
+     */
+    public function it_can_get_files_with_many_only_filters(): void
+    {
+        $fileFinder = new FileFinder(
+            basePath: __DIR__, 
+            onlyPatterns: [
+                '.*/Logics/.*',
+                '.*/Foo/.*',
+            ],
+        );
+
+        $files = $fileFinder->getFiles('Assets');
+
+        $files = iterator_to_array($files, false);
+
+        $this->assertCount(2, $files);
+    }
+
+    /** 
+     * @test 
      * @dataProvider filesWithIgnoreFiltersProvider
      */
     public function it_can_get_files_with_ignore_filters(int $expected, array $ignorePatterns): void

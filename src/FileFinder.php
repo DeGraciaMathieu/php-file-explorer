@@ -22,7 +22,7 @@ final class FileFinder
      * Recursively finds all files with the .php extension in the provided
      * $paths and returns list as Generator.
      */
-    public function getFiles(array|string $paths = [__DIR__]): Generator
+    public function getFiles(array|string $paths): Generator
     {
         $paths = is_array($paths) ? $paths :  [$paths];
 
@@ -43,7 +43,7 @@ final class FileFinder
      */
     private function getFilesFromPath(string $path): Generator
     {
-        if (\is_file($path)) {
+        if (is_file($path)) {
 
             $file = new SplFileInfo($path);
 
@@ -53,7 +53,7 @@ final class FileFinder
         }
 
         # invalid dir path
-        if (! \is_dir($path)) {
+        if (! is_dir($path)) {
             return;
         }
 
@@ -91,12 +91,7 @@ final class FileFinder
                 continue;
             }
 
-            $realPath = $item->getRealPath();
-
-            if (
-                $this->fileShouldBeIgnored($realPath) 
-                || $this->fileShouldNotBeKept($realPath)
-            ) {
+            if ($this->fileShouldBeSkipped($item)) {
                 continue;
             }
 
@@ -109,11 +104,26 @@ final class FileFinder
         return ! in_array($item->getExtension(), $this->fileExtensions, true);
     }
 
+    private function fileShouldBeSkipped(SplFileInfo $item): bool
+    {
+        $realPath = $item->getRealPath();
+
+        if ($this->fileShouldBeIgnored($realPath)) {
+            return true;
+        }
+
+        if ($this->onlyPatterns) {
+            return $this->fileShouldBeKept($realPath);
+        }
+
+        return false;
+    }
+
     private function fileShouldBeIgnored(string $realPath): bool
     {
         foreach ($this->ignorePatterns as $regex) {
 
-            if (\preg_match("#{$regex}#", $realPath)) {
+            if (preg_match("#{$regex}#", $realPath)) {
                 return true;
             }
         }
@@ -121,15 +131,15 @@ final class FileFinder
         return false;
     }
 
-    private function fileShouldNotBeKept(string $realPath): bool
+    private function fileShouldBeKept(string $realPath): bool
     {
         foreach ($this->onlyPatterns as $regex) {
 
-            if (! \preg_match("#{$regex}#", $realPath)) {
-                return true;
+            if (preg_match("#{$regex}#", $realPath)) {
+                return false;
             }
         }
 
-        return false;
+        return true;
     }
 }
