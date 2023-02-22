@@ -19,4 +19,14 @@ final class FileTest extends TestCase
         $this->assertSame('foo/bar/baz.php', $file->fullPath);
         $this->assertSame('bar/baz.php', $file->displayPath);
     }
+
+    /** 
+     * @test 
+     */
+    public function it_can_get_file_contents(): void
+    {
+        $file = new File(__DIR__ . '/Assets/Bar.php', 'Bar.php');
+
+        $this->assertIsString($file->contents());
+    }
 }
