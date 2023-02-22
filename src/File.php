@@ -10,4 +10,9 @@ final class File
         public readonly string $fullPath, 
         public readonly string $displayPath,
     ) {}
+
+    public function contents(): string
+    {
+        return file_get_contents($this->fullPath);
+    }
 }
